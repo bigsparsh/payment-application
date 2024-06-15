@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,10 @@ export default function Component() {
   const info = useSession();
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
+  if (info.status == "authenticated") {
+    router.push("/transaction");
+    return null;
+  }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const out = await signIn("credentials", {
@@ -20,8 +25,12 @@ export default function Component() {
       redirect: false,
     });
     if (!out?.ok) {
-      router.push("/");
+      toast("Invaild Credentials", {
+        description: "Try changing your email or password",
+      });
+      return;
     }
+    router.push("/transaction");
   };
   return (
     <div className="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8 grid place-items-center h-screen">

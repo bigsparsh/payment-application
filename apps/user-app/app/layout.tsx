@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
 import { Chivo, Libre_Franklin } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
@@ -28,6 +29,7 @@ export default function RootLayout({
         <Providers attribute="class" defaultTheme="dark">
           {children}
         </Providers>
+        <Toaster />
       </body>
     </html>
   );

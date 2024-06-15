@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -9,8 +10,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Component({ children }: { children: React.ReactNode }) {
+  const info = useSession();
+  const router = useRouter();
+  if (info.status == "unauthenticated") {
+    router.push("/auth/signup");
+    return null;
+  }
   return (
     <div className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-[280px_1fr]">
       <div className="border-b  lg:border-r lg:border-b-0">
@@ -93,7 +102,13 @@ export default function Component({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  signOut();
+                }}
+              >
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
