@@ -14,10 +14,45 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  user_id        String   @id @default(uuid())
   email     String   @unique
   name      String
   password  String
-  profile_image String
-  auth_type String
+  profile_image String?
+  auth_type AuthType
+  onramp_txns OnRampTransaction[]
+  balance Balance?
+}
+
+model OnRampTransaction {
+  txn_id String @id @default(uuid())
+  user_id String @unique
+  bank Bank
+  user User @relation(fields: [user_id], references: [user_id])
+  amount Int
+  txn_status TransactionStatus
+}
+
+model Balance {
+  balance_id String @id @default(uuid())
+  user_id String @unique
+  user User @relation(fields: [user_id], references: [user_id])
+  amount Int
+  locked Int
+}
+
+enum AuthType {
+  GOOGLE
+  CREDENTIALS
+  GITHUB
+}
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+enum Bank {
+  AXIS
+  HDFC
+  SBI
 }

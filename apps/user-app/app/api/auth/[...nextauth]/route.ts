@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import db from "@repo/db/client";
+import { AuthProvider } from "@repo/db/enums";
 
 const handler = NextAuth({
   providers: [
@@ -45,7 +46,7 @@ const handler = NextAuth({
               name: "Sparsh Singh",
               profile_image:
                 "https://avatars.githubusercontent.com/u/47269261?v=4",
-              auth_type: "credentials",
+              auth_type: AuthProvider.Credentials,
             },
           });
           return newUser;
@@ -60,7 +61,7 @@ const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/signup",
-    error: "/",
+    error: "/transaction",
   },
   callbacks: {
     // @ts-ignore
@@ -71,13 +72,33 @@ const handler = NextAuth({
       user: {
         email: string;
         name: string;
+        image: string;
       };
-      account: { provider: "google" | "github" | "credentials" };
+      account: { provider: AuthProvider };
     }) {
       if (account.provider === "credentials") {
         return true;
       }
       if (account.provider === "google") {
+        await db.user.upsert({
+          where: {
+            email: user.email,
+          },
+          update: {
+            email: user.email,
+            name: user.name,
+            profile_image: user.image,
+            auth_type: AuthProvider.Google,
+          },
+          create: {
+            email: user.email,
+            name: user.name,
+            profile_image: user.image,
+            password: "NaN",
+            auth_type: AuthProvider.Google,
+          },
+        });
+        return true;
       }
       return false;
     },

@@ -37,9 +37,9 @@ export default function Component() {
                   <SelectValue placeholder="Select bank" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bank1">Bank 1</SelectItem>
-                  <SelectItem value="bank2">Bank 2</SelectItem>
-                  <SelectItem value="bank3">Bank 3</SelectItem>
+                  <SelectItem value="hdfc">HDFC Bank</SelectItem>
+                  <SelectItem value="sbi">State Bank of India</SelectItem>
+                  <SelectItem value="axis">Axis Bank</SelectItem>
                 </SelectContent>
               </Select>
             </div>

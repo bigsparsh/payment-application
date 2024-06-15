@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "exports": {
-    "./client": "./index.ts"
+    "./client": "./index.ts",
+    "./enums": "./enums.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
