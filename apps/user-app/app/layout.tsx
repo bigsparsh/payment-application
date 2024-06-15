@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Chivo, Judson } from "next/font/google";
+import { Chivo, Libre_Franklin } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -7,10 +7,9 @@ const chivo = Chivo({
   subsets: ["latin"],
   variable: "--font-chivo",
 });
-const judson = Judson({
+const judson = Libre_Franklin({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-judson",
+  variable: "--font-franklin",
 });
 
 export const metadata: Metadata = {

@@ -1,34 +1,61 @@
+"use client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRef } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Component() {
+  const router = useRouter();
+  const info = useSession();
+  const email = useRef<HTMLInputElement>(null);
+  const password = useRef<HTMLInputElement>(null);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const out = await signIn("credentials", {
+      email: email.current!.value,
+      password: password.current!.value,
+      redirect: false,
+    });
+    if (!out?.ok) {
+      router.push("/");
+    }
+  };
   return (
     <div className="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8 grid place-items-center h-screen">
       <div>
         <div className="space-y-4 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+          <h1 className="text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
             Sign up for your account
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-stone-500 dark:text-stone-400">
             Get started with our secure payment application today.
+          </p>
+          <p
+            className="text-stone-500 dark:text-stone-400"
+            onClick={() => signOut()}
+          >
+            {JSON.stringify(info)}
           </p>
         </div>
         <div className="mt-8 space-y-6">
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">Email </Label>
               <Input
+                ref={email}
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="Enter your email ID"
                 required
               />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
+                ref={password}
                 id="password"
                 type="password"
                 placeholder="Enter your password"
@@ -41,10 +68,10 @@ export default function Component() {
           </form>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-700" />
+              <div className="w-full border-t border-stone-300 dark:border-stone-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+              <span className="bg-white px-2 text-stone-500 dark:bg-stone-950 dark:text-stone-400">
                 Or sign up with
               </span>
             </div>
@@ -54,12 +81,12 @@ export default function Component() {
               <GithubIcon className="mr-2 h-4 w-4" />
               GitHub
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => signIn("google")}>
               <ChromeIcon className="mr-2 h-4 w-4" />
               Google
             </Button>
           </div>
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center text-sm text-stone-500 dark:text-stone-400">
             Already have an account?{" "}
             <Link
               href="#"
