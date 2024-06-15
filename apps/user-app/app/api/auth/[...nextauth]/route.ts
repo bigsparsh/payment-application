@@ -46,7 +46,7 @@ const handler = NextAuth({
               name: "Sparsh Singh",
               profile_image:
                 "https://avatars.githubusercontent.com/u/47269261?v=4",
-              auth_type: AuthProvider.Credentials,
+              auth_type: AuthProvider.CREDENTIALS,
             },
           });
           return newUser;
@@ -74,7 +74,7 @@ const handler = NextAuth({
         name: string;
         image: string;
       };
-      account: { provider: AuthProvider };
+      account: { provider: "google" | "credentials" | "github" };
     }) {
       if (account.provider === "credentials") {
         return true;
@@ -88,14 +88,14 @@ const handler = NextAuth({
             email: user.email,
             name: user.name,
             profile_image: user.image,
-            auth_type: AuthProvider.Google,
+            auth_type: AuthProvider.GOOGLE,
           },
           create: {
             email: user.email,
             name: user.name,
             profile_image: user.image,
             password: "NaN",
-            auth_type: AuthProvider.Google,
+            auth_type: AuthProvider.GOOGLE,
           },
         });
         return true;

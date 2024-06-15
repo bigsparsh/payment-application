@@ -1,11 +1,15 @@
-export enum TransactionStatus {
-  Pending = "PENDING",
-  Completed = "COMPLETED",
-  Failed = "FAILED",
-}
-
 export enum AuthProvider {
-  Credentials = "CREDENTIALS",
-  Google = "GOOGLE",
-  Github = "GITHUB",
+  GOOGLE = "GOOGLE",
+  CREDENTIALS = "CREDENTIALS",
+  GITHUB = "GITHUB",
+}
+export enum TransactionStatus {
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+}
+export enum Bank {
+  AXIS = "AXIS",
+  HDFC = "HDFC",
+  SBI = "SBI",
 }
