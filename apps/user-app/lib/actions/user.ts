@@ -3,19 +3,27 @@
 import { AuthProvider } from "@repo/db/enums";
 import db from "@repo/db/client";
 
+export const getUser = async (email: string) => {
+  return await db.user.findUnique({
+    where: {
+      email,
+    },
+  });
+};
+
 export const createUser = async (credentials: {
   email: string;
   name: string;
   profile_image: string;
-  password: string;
+  password?: string;
   auth_provider: AuthProvider;
 }) => {
   if (credentials.auth_provider === AuthProvider.CREDENTIALS) {
     const newUser = await db.user.create({
       data: {
         email: credentials.email,
-        password: credentials.password,
         name: credentials.name,
+        password: credentials.password as string,
         profile_image: credentials.profile_image,
         auth_type: credentials.auth_provider,
       },
@@ -45,7 +53,6 @@ export const createUser = async (credentials: {
         email: credentials.email,
         name: credentials.name,
         profile_image: credentials.profile_image,
-        password: credentials.password,
         auth_type: AuthProvider.GOOGLE,
       },
     });

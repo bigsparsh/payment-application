@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Component() {
@@ -15,7 +15,7 @@ export default function Component() {
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (params && info.status == "unauthenticated") {
+    if (params) {
       toast("Invalid Credentials", {
         description: params,
       });
@@ -49,12 +49,6 @@ export default function Component() {
           </h1>
           <p className="text-stone-500 dark:text-stone-400">
             Get started with our secure payment application today.
-          </p>
-          <p
-            className="text-stone-500 dark:text-stone-400"
-            onClick={() => signOut()}
-          >
-            {JSON.stringify(info)}
           </p>
         </div>
         <div className="mt-8 space-y-6">

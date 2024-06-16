@@ -4,7 +4,8 @@
   "main": "index.js",
   "exports": {
     "./client": "./index.ts",
-    "./enums": "./enums.ts"
+    "./enums": "./enums.ts",
+    "./types": "./types.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

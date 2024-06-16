@@ -12,11 +12,24 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { useEffect, useState } from "react";
+import { User } from "@repo/db/types";
+import { getUser } from "@/lib/actions/user";
 
 export default function Component({ children }: { children: React.ReactNode }) {
-  const info = useSession();
+  const session = useSession();
   const router = useRouter();
-  if (info.status == "unauthenticated") {
+  const [user, setUser] = useState<User | null>();
+  useEffect(() => {
+    gets();
+  }, [session]);
+  const gets = async () => {
+    if (session.status != "loading" && session.status != "unauthenticated") {
+      setUser(await getUser(session.data?.user?.email as string));
+    }
+  };
+  if (session.status == "unauthenticated") {
     router.push("/auth/signup");
     return null;
   }
@@ -84,15 +97,14 @@ export default function Component({ children }: { children: React.ReactNode }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full border border-gray-200 w-8 h-8 dark:border-gray-800"
+                className="rounded-full border border-gray-200 w-8 h-8 dark:border-gray-800 overflow-hidden"
               >
-                <Image
-                  src="/placeholder.svg"
-                  width="32"
-                  height="32"
-                  className="rounded-full"
-                  alt="Avatar"
-                />
+                <Avatar>
+                  <AvatarImage src={user?.profile_image!} />
+                  <AvatarFallback>
+                    {user?.name.split(" ")[0][0]} {user?.name.split(" ")[1][0]}
+                  </AvatarFallback>
+                </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
@@ -105,6 +117,7 @@ export default function Component({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem
                 onClick={() => {
                   signOut();
+                  router.push("/");
                 }}
               >
                 Logout

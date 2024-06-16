@@ -93,7 +93,6 @@ const handler = NextAuth({
             email: user.email,
             name: user.name,
             profile_image: user.image,
-            password: "NaN",
             auth_provider: AuthProvider.GOOGLE,
           });
         } catch (e) {
