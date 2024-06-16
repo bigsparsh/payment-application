@@ -4,6 +4,8 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import db from "@repo/db/client";
 import { AuthProvider } from "@repo/db/enums";
+import { createUser } from "@/lib/actions/user";
+import { redirect } from "next/navigation";
 
 const handler = NextAuth({
   providers: [
@@ -39,29 +41,23 @@ const handler = NextAuth({
         }
 
         try {
-          const newUser = await db.user.create({
-            data: {
-              email: credentials.email,
-              password: hashedPassword,
-              name: "Sparsh Singh",
-              profile_image:
-                "https://avatars.githubusercontent.com/u/47269261?v=4",
-              auth_type: AuthProvider.CREDENTIALS,
-            },
+          return await createUser({
+            email: credentials.email,
+            name: "Sparsh Singh",
+            profile_image: "https://ui-avatars.com/api/?name=",
+            password: hashedPassword,
+            auth_provider: AuthProvider.CREDENTIALS,
           });
-          return newUser;
         } catch (e) {
-          console.error(e);
+          return null;
         }
-
-        return null;
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/signup",
-    error: "/transaction",
+    error: "/auth/signup",
   },
   callbacks: {
     // @ts-ignore
@@ -79,25 +75,30 @@ const handler = NextAuth({
       if (account.provider === "credentials") {
         return true;
       }
+      const existingUser = await db.user.findFirst({
+        where: {
+          email: user.email,
+          auth_type: AuthProvider.CREDENTIALS,
+        },
+      });
+      if (existingUser) {
+        console.log("User already exists\n\n\n");
+        throw new Error(
+          "An account with this email already exists, try signing with password instead",
+        );
+      }
       if (account.provider === "google") {
-        await db.user.upsert({
-          where: {
-            email: user.email,
-          },
-          update: {
-            email: user.email,
-            name: user.name,
-            profile_image: user.image,
-            auth_type: AuthProvider.GOOGLE,
-          },
-          create: {
+        try {
+          await createUser({
             email: user.email,
             name: user.name,
             profile_image: user.image,
             password: "NaN",
-            auth_type: AuthProvider.GOOGLE,
-          },
-        });
+            auth_provider: AuthProvider.GOOGLE,
+          });
+        } catch (e) {
+          console.error(e);
+        }
         return true;
       }
       return false;

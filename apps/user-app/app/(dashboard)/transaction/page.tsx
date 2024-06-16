@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -19,8 +20,14 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { getTransactions } from "@/lib/actions/tranctions";
+import { useEffect, useState } from "react";
 
 export default function Component() {
+  const [user, setUser] = useState(null);
+  const gets = async () => {
+    return await getTransactions();
+  };
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +50,14 @@ export default function Component() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full">Send Payment</Button>
+            <Button
+              className="w-full"
+              onClick={async () => {
+                console.log(await getTransactions());
+              }}
+            >
+              Send Payment
+            </Button>
           </CardContent>
         </Card>
         <Card>

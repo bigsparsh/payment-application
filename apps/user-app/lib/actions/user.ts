@@ -1,0 +1,61 @@
+"use server";
+
+import { AuthProvider } from "@repo/db/enums";
+import db from "@repo/db/client";
+
+export const createUser = async (credentials: {
+  email: string;
+  name: string;
+  profile_image: string;
+  password: string;
+  auth_provider: AuthProvider;
+}) => {
+  if (credentials.auth_provider === AuthProvider.CREDENTIALS) {
+    const newUser = await db.user.create({
+      data: {
+        email: credentials.email,
+        password: credentials.password,
+        name: credentials.name,
+        profile_image: credentials.profile_image,
+        auth_type: credentials.auth_provider,
+      },
+    });
+    await db.balance.create({
+      data: {
+        user_id: newUser.user_id,
+        amount: 0,
+        locked: 0,
+      },
+    });
+    return newUser;
+  }
+
+  if (credentials.auth_provider === AuthProvider.GOOGLE) {
+    const newUser = await db.user.upsert({
+      where: {
+        email: credentials.email,
+      },
+      update: {
+        email: credentials.email,
+        name: credentials.name,
+        profile_image: credentials.profile_image,
+        auth_type: AuthProvider.GOOGLE,
+      },
+      create: {
+        email: credentials.email,
+        name: credentials.name,
+        profile_image: credentials.profile_image,
+        password: credentials.password,
+        auth_type: AuthProvider.GOOGLE,
+      },
+    });
+    await db.balance.create({
+      data: {
+        user_id: newUser.user_id,
+        amount: 0,
+        locked: 0,
+      },
+    });
+    return newUser;
+  }
+};

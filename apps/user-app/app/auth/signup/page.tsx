@@ -4,15 +4,23 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Component() {
+  const params = useSearchParams().get("error");
   const router = useRouter();
   const info = useSession();
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (params && info.status == "unauthenticated") {
+      toast("Invalid Credentials", {
+        description: params,
+      });
+    }
+  });
   if (info.status == "authenticated") {
     router.push("/transaction");
     return null;
