@@ -39,8 +39,8 @@ export const createTransaction = async (amount: number, bank: Bank) => {
     },
   });
 
-  axios.post(
-    "https://localhost:3001/resolve-on-ramp",
+  await axios.post(
+    "http://localhost:3001/resolve-on-ramp/",
     {
       amount: newTransaction.amount,
       bank: newTransaction.bank,
@@ -48,7 +48,7 @@ export const createTransaction = async (amount: number, bank: Bank) => {
     },
     {
       headers: {
-        Authorization: `Bearer ${jwt.sign({ txn: `${newTransaction.txn_id}${new Date()}` }, process.env.USER_APP_SECRET as string)}`,
+        Authorization: `Bearer ${jwt.sign({ txn_id: `${newTransaction.txn_id}` }, process.env.USER_APP_SECRET as string)}`,
       },
     },
   );

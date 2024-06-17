@@ -4,8 +4,9 @@ const PORT = 3002;
 
 app.use(express.json());
 
-app.get("/get", async (req, res) => {
-  res.send("Hello World!");
+app.post("/", async (req, res) => {
+  console.log(await req.body);
+  res.send("Hello World");
 });
 
 app.listen(PORT);

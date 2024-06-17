@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import express from "express";
 import axios from "axios";
 import { authMiddleware } from "./middleware/auth.js";
+import "dotenv/config";
 const app = express();
 const PORT = 3001;
 
@@ -12,19 +13,13 @@ const rand = (min: number, max: number) => {
 
 app.use(express.json());
 
-// a request from the user-app will come
-// stating the amount
-// You need to ping the webhook
-// tell it after a random amount of time
-// if the payment was successful or not
-
 app.post("/resolve-on-ramp", authMiddleware, async (req, res) => {
   // getting the body
   const body: {
     amount: number;
     bank: Bank;
     user_id: string;
-  } = req.body;
+  } = await req.body;
 
   //getinng the txn id from the jwt
   const { txn_id } = jwt.decode(
