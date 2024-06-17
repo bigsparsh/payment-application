@@ -43,7 +43,7 @@ export const createTransaction = async (amount: number, bank: Bank) => {
       },
       data: {
         amount: {
-          increment: amount,
+          increment: amount * 100,
         },
       },
     }),

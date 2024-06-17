@@ -102,8 +102,8 @@ export default function Component({ children }: { children: React.ReactNode }) {
                 <Avatar>
                   <AvatarImage src={user?.profile_image!} />
                   <AvatarFallback>
-                    {user?.name.split(" ")[0][0]}{" "}
-                    {user?.name.split(" ")[1]?.[0]}
+                    {user?.name.split(" ")[0][0].toUpperCase()}{" "}
+                    {user?.name.split(" ")[1]?.[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
