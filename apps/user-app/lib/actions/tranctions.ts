@@ -2,6 +2,8 @@
 
 import { Bank, TransactionStatus } from "@repo/db/enums";
 import db from "@repo/db/client";
+import axios from "axios";
+import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth";
 
 export const getTransactions = async () => {
@@ -28,25 +30,28 @@ export const createTransaction = async (amount: number, bank: Bank) => {
     throw new Error("User not found");
   }
 
-  const [newTransaction, _] = await db.$transaction([
-    db.onRampTransaction.create({
-      data: {
-        bank,
-        user_id: user.user_id,
-        amount,
-        txn_status: TransactionStatus.PENDING,
+  const newTransaction = await db.onRampTransaction.create({
+    data: {
+      bank,
+      user_id: user.user_id,
+      amount,
+      txn_status: TransactionStatus.PENDING,
+    },
+  });
+
+  axios.post(
+    "https://localhost:3001/resolve-on-ramp",
+    {
+      amount: newTransaction.amount,
+      bank: newTransaction.bank,
+      user_id: newTransaction.user_id,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${jwt.sign({ txn: `${newTransaction.txn_id}${new Date()}` }, process.env.USER_APP_SECRET as string)}`,
       },
-    }),
-    db.balance.update({
-      where: {
-        user_id: user.user_id,
-      },
-      data: {
-        amount: {
-          increment: amount * 100,
-        },
-      },
-    }),
-  ]);
+    },
+  );
+
   return newTransaction;
 };

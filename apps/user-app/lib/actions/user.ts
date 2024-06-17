@@ -29,13 +29,15 @@ export const createUser = async (credentials: {
         auth_type: credentials.auth_provider,
       },
     });
-    await db.balance.create({
-      data: {
-        user_id: newUser.user_id,
-        amount: 0,
-        locked: 0,
-      },
-    });
+    try {
+      await db.balance.create({
+        data: {
+          user_id: newUser.user_id,
+          amount: 0,
+          locked: 0,
+        },
+      });
+    } catch (e) { }
     return newUser;
   }
 
@@ -60,13 +62,15 @@ export const createUser = async (credentials: {
         auth_type: credentials.auth_provider,
       },
     });
-    await db.balance.create({
-      data: {
-        user_id: newUser.user_id,
-        amount: 0,
-        locked: 0,
-      },
-    });
+    try {
+      await db.balance.create({
+        data: {
+          user_id: newUser.user_id,
+          amount: 0,
+          locked: 0,
+        },
+      });
+    } catch (e) { }
     return newUser;
   }
 };
