@@ -15,12 +15,13 @@ export default function Component() {
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    console.log(info);
     if (params) {
       toast("Invalid Credentials", {
         description: params,
       });
     }
-  });
+  }, [info, params]);
   if (info.status == "authenticated") {
     router.push("/transaction");
     return null;
@@ -88,7 +89,7 @@ export default function Component() {
             </div>
           </div>
           <div className="flex justify-center gap-4">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => signIn("github")}>
               <GithubIcon className="mr-2 h-4 w-4" />
               GitHub
             </Button>

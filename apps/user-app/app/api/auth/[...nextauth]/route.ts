@@ -1,11 +1,11 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import GithubProvider from "next-auth/providers/github";
 import bcrypt from "bcrypt";
 import db from "@repo/db/client";
 import { AuthProvider } from "@repo/db/enums";
 import { createUser } from "@/lib/actions/user";
-import { redirect } from "next/navigation";
 
 const handler = NextAuth({
   providers: [
@@ -13,6 +13,13 @@ const handler = NextAuth({
       name: "Google",
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+
+    GithubProvider({
+      name: "Github",
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -32,7 +39,7 @@ const handler = NextAuth({
         if (existingUser) {
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
-            existingUser.password,
+            existingUser.password as string,
           );
           if (isPasswordValid) {
             return existingUser;
@@ -43,7 +50,7 @@ const handler = NextAuth({
         try {
           return await createUser({
             email: credentials.email,
-            name: "Sparsh Singh",
+            name: credentials.email.split("@")[0],
             profile_image: "https://ui-avatars.com/api/?name=",
             password: hashedPassword,
             auth_provider: AuthProvider.CREDENTIALS,
@@ -72,6 +79,7 @@ const handler = NextAuth({
       };
       account: { provider: "google" | "credentials" | "github" };
     }) {
+      console.log(JSON.stringify(account) + "\n\n\n");
       if (account.provider === "credentials") {
         return true;
       }
@@ -82,12 +90,22 @@ const handler = NextAuth({
         },
       });
       if (existingUser) {
-        console.log("User already exists\n\n\n");
         throw new Error(
           "An account with this email already exists, try signing with password instead",
         );
       }
       if (account.provider === "google") {
+        const githubUser = await db.user.findFirst({
+          where: {
+            email: user.email,
+            auth_type: AuthProvider.GITHUB,
+          },
+        });
+        if (githubUser) {
+          throw new Error(
+            "An account with this email already exists in github, try signing with github instead",
+          );
+        }
         try {
           await createUser({
             email: user.email,
@@ -95,6 +113,31 @@ const handler = NextAuth({
             profile_image: user.image,
             auth_provider: AuthProvider.GOOGLE,
           });
+        } catch (e) {
+          console.error(e);
+        }
+        return true;
+      }
+      if (account.provider === "github") {
+        const googleUser = await db.user.findFirst({
+          where: {
+            email: user.email,
+            auth_type: AuthProvider.GOOGLE,
+          },
+        });
+        if (googleUser) {
+          throw new Error(
+            "An account with this email already exists in google, try signing with google instead",
+          );
+        }
+        try {
+          await createUser({
+            email: user.email,
+            name: user.name,
+            profile_image: user.image,
+            auth_provider: AuthProvider.GITHUB,
+          });
+          return true;
         } catch (e) {
           console.error(e);
         }
