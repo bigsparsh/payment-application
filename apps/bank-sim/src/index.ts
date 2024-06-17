@@ -42,7 +42,7 @@ app.post("/resolve-on-ramp", authMiddleware, async (req, res) => {
     },
     {
       headers: {
-        Authorization: `Bearer ${jwt.sign({ txn: `${body.user_id}${new Date()}` }, process.env.WEBHOOK_SECRET as string)}`,
+        Authorization: `Bearer ${jwt.sign({ txn_token: `${body.user_id}${new Date()}` }, process.env.WEBHOOK_SECRET as string)}`,
       },
     },
   );
