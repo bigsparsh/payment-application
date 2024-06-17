@@ -1,81 +1,31 @@
-# Turborepo starter
+# What is this project?
 
-This is an official starter Turborepo.
+---
 
-## Using this example
+This is a project made using the MERN stack, well not exactly MERN, but PostgreSQL as database, Express as backend, React.js / Next.js as frontend and Node.js as server. This is a payment application which means dealing with money, so security is a must. This project is made with security in mind, so you can trust it.
 
-Run the following command:
+# How to setup the project?
 
-```sh
-npx create-turbo@latest
-```
+---
 
-## What's inside?
+1. Clone the repository
+2. Run `npm install` in the root directory to install all the dependencies
+3. Find all the `.env.example` files and rename them to `.env`
+4. Fill in the `.env` files with your own values
+5. Run `npx prisma migrate dev` in the `packages/db/` directory to migrate the database
+6. Run `npm run dev` in the root directory
+7. Go to `http://localhost:3000` in your browser to see the user-app (User Frontend)
+8. Go to `http://localhost:3001` in your browser to see the bank-sim (Bank Simulating Frontend)
+9. Go to `http://localhost:3002` in your browser to see the webhook (A Server which will not vulnerable to attacks beacuse no frontend access it and it directly talks to the banking API)
+10. Signup using github, google or create an account using email at `http://localhost:3000/auth/signup`
 
-This Turborepo includes the following packages/apps:
+# What technologies are used in this project?
 
-### Apps and Packages
+---
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+- Turborepo
+- Prisma
+- PostgreSQL
+- Next.js
+- Express
+- Node.js
