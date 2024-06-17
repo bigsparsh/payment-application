@@ -24,9 +24,10 @@ import { createTransaction, getTransactions } from "@/lib/actions/tranctions";
 import { useEffect, useRef, useState } from "react";
 import { Balance, OnRampTransaction } from "@repo/db/types";
 import { getBalance } from "@/lib/actions/balance";
-import { Bank } from "@repo/db/enums";
+import { Bank, TransactionStatus } from "@repo/db/enums";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { LoaderPinwheel, RotateCw } from "lucide-react";
 
 export default function Component() {
   const session = useSession();
@@ -34,27 +35,37 @@ export default function Component() {
   const [bank, setBank] = useState<string>();
   const amount = useRef<HTMLInputElement>(null);
   const [tranctions, setTransactions] = useState<OnRampTransaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
   useEffect(() => {
+    setLoading(true);
     gets();
+    setLoading(false);
   }, [session]);
+
   const gets = async () => {
     if (session.status === "loading" || session.status === "unauthenticated")
       return;
-    setTransactions(await getTransactions());
+    setTransactions((await getTransactions()).reverse());
     setBalance(await getBalance());
     return;
   };
+
   const handleSubmit = async () => {
+    setLoading(true);
     if (!amount.current?.value || !bank) {
       toast("Please fill all the fields");
+      setLoading(false);
       return;
     }
     const newTransaction = await createTransaction(
       Number(amount.current?.value),
       bank as Bank,
     );
-    setTransactions([...tranctions, newTransaction]);
+    setTransactions([newTransaction, ...tranctions]);
+    setLoading(false);
   };
+
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +73,12 @@ export default function Component() {
           <CardContent className="grid gap-4 mt-7">
             <div className="grid gap-2">
               <Label htmlFor="amount">Amount</Label>
-              <Input id="amount" placeholder="Enter amount" ref={amount} />
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                ref={amount}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="bank">Bank</Label>
@@ -81,9 +97,15 @@ export default function Component() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full" onClick={handleSubmit}>
-              Add Funds
-            </Button>
+            {loading ? (
+              <Button className="w-full" onClick={handleSubmit} disabled>
+                <LoaderPinwheel size={16} className="animate-spin" />
+              </Button>
+            ) : (
+              <Button className="w-full" onClick={handleSubmit}>
+                Add Funds
+              </Button>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -124,7 +146,24 @@ export default function Component() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="flex justify-between items-center">
+            Recent Transactions
+            {loading ? (
+              <Button disabled>
+                <RotateCw size={16} className="animate-spin" />
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setLoading(true);
+                  gets();
+                  setLoading(false);
+                }}
+              >
+                <RotateCw size={16} />
+              </Button>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -145,7 +184,13 @@ export default function Component() {
                       <TableCell>{ele.bank}</TableCell>
                       <TableCell>${ele.amount}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{ele.txn_status}</Badge>
+                        {ele.txn_status === TransactionStatus.PENDING ? (
+                          <Badge variant="secondary">{ele.txn_status}</Badge>
+                        ) : ele.txn_status === TransactionStatus.SUCCESS ? (
+                          <Badge variant="default">{ele.txn_status}</Badge>
+                        ) : (
+                          <Badge variant="destructive">{ele.txn_status}</Badge>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

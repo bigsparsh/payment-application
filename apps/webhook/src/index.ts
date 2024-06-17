@@ -5,6 +5,9 @@ import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
 const app = express();
 const PORT = 3002;
+const rand = (min: number, max: number) => {
+  return Math.round(Math.random() * (max - min) + min);
+};
 
 app.use(express.json());
 
@@ -26,6 +29,9 @@ app.post("/", authMiddleware, async (req, res) => {
     user_id: string;
     txn_id: string;
   } = await req.body;
+
+  // waiting for a random amount of time
+  await new Promise((r) => setTimeout(r, rand(1000, 5000)));
 
   // updating the transaction status in the database
   await db.$transaction(async (tx) => {

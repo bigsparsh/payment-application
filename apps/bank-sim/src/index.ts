@@ -26,9 +26,6 @@ app.post("/resolve-on-ramp", authMiddleware, async (req, res) => {
     req.headers.authorization?.split(" ")[1] as string,
   ) as { txn_id: string };
 
-  // waiting for a random amount of time
-  await new Promise((r) => setTimeout(r, rand(1000, 5000)));
-
   // sending the response to the webhook
   await axios.post(
     process.env.WEBHOOK_URL as string,
