@@ -39,7 +39,7 @@ export default function Component() {
       });
       return;
     }
-    router.push("/transaction");
+    router.push("/dashboard");
   };
   return (
     <div className="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8 grid place-items-center h-screen">

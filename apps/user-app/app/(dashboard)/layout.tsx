@@ -9,19 +9,43 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useEffect, useState } from "react";
 import { User } from "@repo/db/types";
 import { getUser } from "@/lib/actions/user";
+import { ArrowUpDown } from "lucide-react";
 
 export default function Component({ children }: { children: React.ReactNode }) {
+  const path = usePathname();
   const session = useSession();
+  const navContent = [
+    {
+      name: "Dashboard",
+      icon: <WalletIcon className="h-4 w-4" />,
+      href: "/dashboard",
+    },
+    {
+      name: "Peer to Peer",
+      icon: <ArrowUpDown className="h-4 w-4" />,
+      href: "/p2p",
+    },
+    {
+      name: "Transactions",
+      icon: <ReceiptIcon className="h-4 w-4" />,
+      href: "/transactions",
+    },
+    {
+      name: "Settings",
+      icon: <SettingsIcon className="h-4 w-4" />,
+      href: "/settings",
+    },
+  ];
   const router = useRouter();
   const [user, setUser] = useState<User | null>();
   useEffect(() => {
+    console.log(path);
     gets();
   }, [session]);
   const gets = async () => {
@@ -48,38 +72,20 @@ export default function Component({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex-1 overflow-auto py-2">
           <nav className="grid items-start px-4 text-sm font-medium">
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg  px-3 py-2  transition-all"
-              prefetch={false}
-            >
-              <HomeIcon className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg  px-3 py-2  transition-all"
-              prefetch={false}
-            >
-              <WalletIcon className="h-4 w-4" />
-              Payments
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg  px-3 py-2  transition-all"
-              prefetch={false}
-            >
-              <ReceiptIcon className="h-4 w-4" />
-              Transactions
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 rounded-lg  px-3 py-2  transition-all"
-              prefetch={false}
-            >
-              <SettingsIcon className="h-4 w-4" />
-              Settings
-            </Link>
+            {navContent.map((item, index) => (
+              <Link
+                key={index}
+                href={item.href}
+                className={`flex items-center gap-2 py-2 px-6 rounded-lg ${path == item.href
+                    ? "bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                    : "text-stone-600 dark:text-stone-300"
+                  }`}
+                prefetch={false}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </nav>
         </div>
       </div>
@@ -90,14 +96,24 @@ export default function Component({ children }: { children: React.ReactNode }) {
             <span className="sr-only">Dashboard</span>
           </Link>
           <div className="flex-1">
-            <h1 className="font-semibold text-lg">Dashboard</h1>
+            <h1 className="font-semibold text-lg">
+              {path == "/dashboard"
+                ? "Dashboard"
+                : path == "/p2p"
+                  ? "Peer to Peer"
+                  : path == "/transactions"
+                    ? "Transactions"
+                    : path == "/settings"
+                      ? "Settings"
+                      : ""}
+            </h1>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full border border-gray-200 w-8 h-8 dark:border-gray-800 overflow-hidden"
+                className="rounded-full border border-stone-200 w-8 h-8 dark:border-stone-800 overflow-hidden"
               >
                 <Avatar>
                   <AvatarImage src={user?.profile_image!} />
