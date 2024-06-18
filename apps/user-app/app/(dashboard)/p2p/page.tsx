@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -148,11 +148,23 @@ export default function Component() {
                   <Label htmlFor="amount">Amount</Label>
                   <Input
                     id="amount"
-                    type="number"
+                    type="text"
                     placeholder="0.00"
-                    min={0}
-                    max={99999}
-                    onChange={(e) => setAmount(parseFloat(e.target.value))}
+                    onChange={(e) => {
+                      if (e.target.value.split(".").length > 2) {
+                        e.target.value = e.target.value.slice(0, -1);
+                      }
+                      e.target.value = e.target.value.replace(/[^0-9.]/g, "");
+                      if (e.target.value.length > 5) {
+                        if (e.target.value.includes("."))
+                          e.target.value = e.target.value.slice(0, 8);
+                        else e.target.value = e.target.value.slice(0, 5);
+                      }
+                      if (e.target.value.split(".")[1]?.length > 2) {
+                        e.target.value = e.target.value.slice(0, -1);
+                      }
+                      setAmount(parseFloat(e.target.value));
+                    }}
                     required
                   />
                 </div>
@@ -202,12 +214,12 @@ export default function Component() {
                 </div>
                 <div className="flex justify-between">
                   <span>Bank:</span>
-                  <span>{bank}</span>
+                  <span>{bank ? bank : "Select a Bank"}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total:</span>
-                  <span>$50.00</span>
+                  <span>${amount ? amount : "0.00"}</span>
                 </div>
               </CardContent>
             </Card>
@@ -244,8 +256,8 @@ export default function Component() {
                             {transfer.txn_status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{transfer.from_user.name}</TableCell>
-                        <TableCell>${transfer.amount.toFixed(2)}</TableCell>
+                        <TableCell>{transfer.to_user.name}</TableCell>
+                        <TableCell>${transfer.amount / 100}</TableCell>
                         <TableCell>{transfer.bank}</TableCell>
                       </TableRow>
                     ),
