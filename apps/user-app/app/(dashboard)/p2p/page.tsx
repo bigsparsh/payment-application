@@ -31,7 +31,7 @@ import { Bank, TransactionStatus } from "@repo/db/enums";
 import { getUserList } from "@/lib/actions/user";
 import { createP2P, getP2P } from "@/lib/actions/p2p";
 import { toast } from "sonner";
-import { Ban } from "lucide-react";
+import { Ban, LoaderPinwheel, RotateCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 type ExtraUser = {
@@ -43,26 +43,31 @@ export default function Component() {
   const [transactions, setTransactions] =
     useState<(PeerToPeerTransaction & ExtraUser)[]>();
   const [bank, setBank] = useState<Bank>();
+  const [loading, setLoading] = useState<boolean>(false);
   const [amount, setAmount] = useState<number>();
   const [searchResults, setSearchResults] = useState<User[]>();
   const [selectedRecipient, setSelectedRecipient] = useState<User>();
 
   useEffect(() => {
-    if (session.status === "authenticated") {
-      gets();
-    }
+    if (session.status === "loading") setLoading(true);
+    else setLoading(false);
+    if (session.status === "authenticated") gets();
   }, [session]);
 
   const gets = async () => {
+    setLoading(true);
     setTransactions((await getP2P()).reverse());
     setSearchResults(await getUserList());
+    setLoading(false);
   };
 
   var debouncer: ReturnType<typeof setTimeout>;
   const getSearchResults = async (e: React.ChangeEvent<HTMLInputElement>) => {
     clearTimeout(debouncer);
     debouncer = setTimeout(async () => {
+      setLoading(true);
       setSearchResults(await getUserList(e.target.value as string));
+      setLoading(false);
     }, 300);
   };
 
@@ -75,7 +80,7 @@ export default function Component() {
       });
       return;
     }
-
+    setLoading(true);
     const transaction: PeerToPeerTransaction & ExtraUser = await createP2P(
       session.data?.user?.email as string,
       selectedRecipient.email,
@@ -83,6 +88,7 @@ export default function Component() {
       bank,
     );
     setTransactions([transaction, ...transactions!]);
+    setLoading(false);
   };
 
   return (
@@ -195,7 +201,13 @@ export default function Component() {
                   </Select>
                 </div>
                 <div className="flex justify-end">
-                  <Button>Send Payment</Button>
+                  {loading ? (
+                    <Button disabled>
+                      <LoaderPinwheel size={16} className="animate-spin" />
+                    </Button>
+                  ) : (
+                    <Button>Send Payment</Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -226,7 +238,18 @@ export default function Component() {
           </div>
         </div>
         <div className="max-w-2xl mx-auto mt-8">
-          <h2 className="text-xl font-bold mb-4">Previous Transfers</h2>
+          <div className="text-xl font-bold mb-4 flex justify-between items-center">
+            Previous Transfers
+            {loading ? (
+              <Button disabled>
+                <RotateCw size={16} className="animate-spin" />
+              </Button>
+            ) : (
+              <Button onClick={gets}>
+                <RotateCw size={16} />
+              </Button>
+            )}
+          </div>
           <Card>
             <Table>
               <TableHeader>

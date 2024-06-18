@@ -1,12 +1,8 @@
 # What is this project?
 
----
-
-This is a project made using the MERN stack, well not exactly MERN, but PostgreSQL as database, Express as backend, React.js / Next.js as frontend and Node.js as server. This is a payment application which means dealing with money, so security is a must. This project is made with security in mind, so you can trust it.
+This is a project made using the MERN stack, well not exactly MERN, but PostgreSQL as database, Express as backend, React.js / Next.js as frontend and Node.js as server. This is a payment application which means dealing with money, so security is a must. This project is made with security in (mind), so you can trust it.
 
 # How to setup the project?
-
----
 
 1. Clone the repository
 2. Run `npm install` in the root directory to install all the dependencies
@@ -21,11 +17,18 @@ This is a project made using the MERN stack, well not exactly MERN, but PostgreS
 
 # What technologies are used in this project?
 
----
-
 - Turborepo
 - Prisma
 - PostgreSQL
 - Next.js
 - Express
 - Node.js
+
+# TODO for features (May or may not be implemented in the future)
+
+- Friend/contacts system
+- Email notifications and verification
+- Integrating a product store
+- Live chatting system and other live features
+
+> All the credits for the frontend goes to [v0.dev](https://v0.dev) it is such an amazing tool, as I like to rush the frontend and get to the juicy part which is backend and v0 helped reduce the time I spend on frontend. I highly recommend it to everyone who is looking to build a project quickly and efficiently.
