@@ -22,6 +22,8 @@ model User {
   auth_type AuthType
   onramp_txns OnRampTransaction[]
   balance Balance?
+  from_user PeerToPeerTransaction[] @relation("from_user")
+  to_user PeerToPeerTransaction[] @relation("to_user")
 }
 
 model OnRampTransaction {
@@ -29,6 +31,18 @@ model OnRampTransaction {
   user_id String 
   bank Bank
   user User @relation(fields: [user_id], references: [user_id])
+  amount Int
+  txn_status TransactionStatus
+}
+
+
+model PeerToPeerTransaction {
+  txn_id String @id @default(uuid())
+  from_user_id String 
+  to_user_id String
+  bank Bank
+  from_user User @relation("from_user", fields: [from_user_id], references: [user_id])
+  to_user User @relation("to_user", fields: [to_user_id], references: [user_id])
   amount Int
   txn_status TransactionStatus
 }

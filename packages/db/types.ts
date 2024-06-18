@@ -1,1 +1,6 @@
-export { OnRampTransaction, User, Balance } from "@prisma/client";
+export {
+  OnRampTransaction,
+  User,
+  Balance,
+  PeerToPeerTransaction,
+} from "@prisma/client";

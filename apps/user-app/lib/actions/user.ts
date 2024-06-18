@@ -74,3 +74,19 @@ export const createUser = async (credentials: {
     return newUser;
   }
 };
+
+export const getUserList = async (
+  searchFilter: string = "",
+  skip: number = 0,
+  take: number = 5,
+) => {
+  return await db.user.findMany({
+    skip,
+    take,
+    where: {
+      email: {
+        contains: searchFilter,
+      },
+    },
+  });
+};

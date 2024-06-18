@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,37 +26,70 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-
+import { PeerToPeerTransaction, User } from "@repo/db/types";
+import { Bank, TransactionStatus } from "@repo/db/enums";
+import { getUserList } from "@/lib/actions/user";
+import { createP2P, getP2P } from "@/lib/actions/p2p";
+import { toast } from "sonner";
+import { Ban } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Badge } from "@/components/ui/badge";
+type ExtraUser = {
+  from_user: User;
+  to_user: User;
+};
 export default function Component() {
-  const [transfers, setTransfers] = useState([
-    {
-      id: 1,
-      recipient: "John Doe",
-      amount: 50.0,
-      bank: "Chase",
-      date: "2023-05-15",
-    },
-    {
-      id: 2,
-      recipient: "Jane Smith",
-      amount: 75.0,
-      bank: "Wells Fargo",
-      date: "2023-04-20",
-    },
-    {
-      id: 3,
-      recipient: "Bob Johnson",
-      amount: 25.0,
-      bank: "Bank of America",
-      date: "2023-03-10",
-    },
-  ]);
-  const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const session = useSession();
+  const [transactions, setTransactions] =
+    useState<(PeerToPeerTransaction & ExtraUser)[]>();
+  const [bank, setBank] = useState<Bank>();
+  const [amount, setAmount] = useState<number>();
+  const [searchResults, setSearchResults] = useState<User[]>();
+  const [selectedRecipient, setSelectedRecipient] = useState<User>();
+
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      gets();
+    }
+  }, [session]);
+
+  const gets = async () => {
+    setTransactions((await getP2P()).reverse());
+    setSearchResults(await getUserList());
+  };
+
+  var debouncer: ReturnType<typeof setTimeout>;
+  const getSearchResults = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    clearTimeout(debouncer);
+    debouncer = setTimeout(async () => {
+      setSearchResults(await getUserList(e.target.value as string));
+    }, 300);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedRecipient || !bank || !amount) {
+      toast("Invaild input", {
+        description: "Please fill all the fields",
+        icon: <Ban size="16" />,
+      });
+      return;
+    }
+
+    const transaction: PeerToPeerTransaction & ExtraUser = await createP2P(
+      session.data?.user?.email as string,
+      selectedRecipient.email,
+      amount * 100,
+      bank,
+    );
+    setTransactions([transaction, ...transactions!]);
+  };
+
   return (
     <div className="flex flex-col">
       <main className="flex-1 py-8 px-6 md:px-8">
         <div className="max-w-2xl mx-auto grid md:grid-cols-2 gap-8">
-          <div>
+          <form onSubmit={handleSubmit}>
             <h1 className="text-2xl font-bold mb-4">Send Money</h1>
             <Card>
               <CardContent className="space-y-4 mt-7">
@@ -80,50 +113,32 @@ export default function Component() {
                           type="email"
                           placeholder="Search by email"
                           className="w-full"
+                          onChange={getSearchResults}
                         />
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">John Doe</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setSelectedRecipient({
-                                  email: "john@example.com",
-                                })
-                              }
-                            >
-                              <PlusIcon className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">Jane Smith</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setSelectedRecipient({
-                                  email: "jane@example.com",
-                                })
-                              }
-                            >
-                              <PlusIcon className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">Bob Johnson</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setSelectedRecipient({
-                                  email: "bob@example.com",
-                                })
-                              }
-                            >
-                              <PlusIcon className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          {searchResults?.length != 0 ? (
+                            searchResults?.map((user) => {
+                              return (
+                                <div
+                                  className="flex items-center justify-between"
+                                  key={user.user_id}
+                                >
+                                  <span className="font-medium">
+                                    {user.email}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setSelectedRecipient(user)}
+                                  >
+                                    <PlusIcon className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="mt-4">No results found</div>
+                          )}
                         </div>
                       </div>
                     </PopoverContent>
@@ -131,20 +146,39 @@ export default function Component() {
                 </div>
                 <div>
                   <Label htmlFor="amount">Amount</Label>
-                  <Input id="amount" type="number" placeholder="0.00" />
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="0.00"
+                    min={0}
+                    max={99999}
+                    onChange={(e) => setAmount(parseFloat(e.target.value))}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="bank">Bank</Label>
-                  <Select>
+                  <Select
+                    onValueChange={(val) =>
+                      setBank(
+                        val === "AXIS"
+                          ? Bank.AXIS
+                          : val === "SBI"
+                            ? Bank.SBI
+                            : Bank.HDFC,
+                      )
+                    }
+                    required
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select bank" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="chase">Chase</SelectItem>
-                      <SelectItem value="wells-fargo">Wells Fargo</SelectItem>
-                      <SelectItem value="bank-of-america">
-                        Bank of America
+                      <SelectItem value={Bank.HDFC}>HDFC Bank</SelectItem>
+                      <SelectItem value={Bank.SBI}>
+                        State Bank of India
                       </SelectItem>
+                      <SelectItem value={Bank.AXIS}>Axis Bank</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -153,22 +187,22 @@ export default function Component() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </form>
           <div>
             <h2 className="text-xl font-bold mb-4">Transfer Summary</h2>
             <Card>
               <CardContent className="space-y-4 mt-7">
                 <div className="flex justify-between">
                   <span>Recipient:</span>
-                  <span>{selectedRecipient?.email || "N/A"}</span>
+                  <span>{selectedRecipient?.name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Amount:</span>
-                  <span>$50.00</span>
+                  <span>${amount ? amount : "0.00"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Bank:</span>
-                  <span>Chase</span>
+                  <span>{bank}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-medium">
@@ -185,21 +219,37 @@ export default function Component() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Recipient</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Bank</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transfers.map((transfer) => (
-                  <TableRow key={transfer.id}>
-                    <TableCell>{transfer.date}</TableCell>
-                    <TableCell>{transfer.recipient}</TableCell>
-                    <TableCell>${transfer.amount.toFixed(2)}</TableCell>
-                    <TableCell>{transfer.bank}</TableCell>
-                  </TableRow>
-                ))}
+                {transactions &&
+                  transactions.map(
+                    (transfer: PeerToPeerTransaction & ExtraUser) => (
+                      <TableRow key={transfer.txn_id}>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              transfer.txn_status === TransactionStatus.PENDING
+                                ? "secondary"
+                                : transfer.txn_status ===
+                                  TransactionStatus.FAILED
+                                  ? "destructive"
+                                  : "default"
+                            }
+                          >
+                            {transfer.txn_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{transfer.from_user.name}</TableCell>
+                        <TableCell>${transfer.amount.toFixed(2)}</TableCell>
+                        <TableCell>{transfer.bank}</TableCell>
+                      </TableRow>
+                    ),
+                  )}
               </TableBody>
             </Table>
           </Card>
@@ -209,7 +259,7 @@ export default function Component() {
   );
 }
 
-function ChevronDownIcon(props) {
+function ChevronDownIcon(props: any) {
   return (
     <svg
       {...props}
@@ -228,7 +278,7 @@ function ChevronDownIcon(props) {
   );
 }
 
-function PlusIcon(props) {
+function PlusIcon(props: any) {
   return (
     <svg
       {...props}

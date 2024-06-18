@@ -23,7 +23,7 @@ export default function Component() {
     }
   }, [info, params]);
   if (info.status == "authenticated") {
-    router.push("/transaction");
+    router.push("/dashboard");
     return null;
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
