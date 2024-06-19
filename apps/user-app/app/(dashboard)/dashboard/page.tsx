@@ -27,7 +27,7 @@ import { getBalance } from "@/lib/actions/balance";
 import { Bank, TransactionStatus } from "@repo/db/enums";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { LoaderPinwheel, RotateCw } from "lucide-react";
+import { Ban, LoaderPinwheel, RotateCw } from "lucide-react";
 
 export default function Component() {
   const session = useSession();
@@ -58,11 +58,20 @@ export default function Component() {
       setLoading(false);
       return;
     }
-    const newTransaction = await createTransaction(
-      Number(amount.current?.value),
-      bank as Bank,
-    );
-    setTransactions([newTransaction, ...tranctions]);
+    try {
+      const newTransaction = await createTransaction(
+        Number(amount.current?.value),
+        bank as Bank,
+      );
+      setTransactions([newTransaction, ...tranctions]);
+    } catch (e: any) {
+      toast("Transfer Failed", {
+        description: e.message,
+        icon: <Ban size="16" />,
+      });
+      setLoading(false);
+      return;
+    }
     setLoading(false);
   };
 
@@ -75,9 +84,24 @@ export default function Component() {
               <Label htmlFor="amount">Amount</Label>
               <Input
                 id="amount"
-                type="number"
-                placeholder="Enter amount"
+                type="text"
+                placeholder="0.00"
                 ref={amount}
+                onChange={(e) => {
+                  if (e.target.value.split(".").length > 2) {
+                    e.target.value = e.target.value.slice(0, -1);
+                  }
+                  e.target.value = e.target.value.replace(/[^0-9.]/g, "");
+                  if (e.target.value.length > 5) {
+                    if (e.target.value.includes("."))
+                      e.target.value = e.target.value.slice(0, 8);
+                    else e.target.value = e.target.value.slice(0, 5);
+                  }
+                  if (e.target.value.split(".")[1]?.length > 2) {
+                    e.target.value = e.target.value.slice(0, -1);
+                  }
+                }}
+                required
               />
             </div>
             <div className="grid gap-2">

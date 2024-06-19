@@ -8,12 +8,17 @@ import { getServerSession } from "next-auth";
 
 export const getTransactions = async () => {
   const session = await getServerSession();
-  const userTransactions = await db.onRampTransaction.findMany({
-    where: {
-      user: {
-        email: session?.user?.email as string,
+  const userTransactions = (
+    await db.onRampTransaction.findMany({
+      where: {
+        user: {
+          email: session?.user?.email as string,
+        },
       },
-    },
+    })
+  ).map((transaction) => {
+    transaction.amount = transaction.amount / 100;
+    return transaction;
   });
   return userTransactions;
 };
@@ -24,22 +29,28 @@ export const createTransaction = async (amount: number, bank: Bank) => {
     where: {
       email: session?.user?.email as string,
     },
+    include: {
+      balance: true,
+    },
   });
 
   if (!user) {
     throw new Error("User not found");
+  }
+  if (amount <= 0) {
+    throw new Error("Amount cannot be negative or Zero");
   }
 
   const newTransaction = await db.onRampTransaction.create({
     data: {
       bank,
       user_id: user.user_id,
-      amount,
+      amount: amount * 100,
       txn_status: TransactionStatus.PENDING,
     },
   });
 
-  await axios.post(
+  axios.post(
     "http://localhost:3001/resolve-on-ramp/",
     {
       amount: newTransaction.amount,
@@ -52,6 +63,6 @@ export const createTransaction = async (amount: number, bank: Bank) => {
       },
     },
   );
-
+  newTransaction.amount = newTransaction.amount / 100;
   return newTransaction;
 };

@@ -2,6 +2,7 @@
 
 import { AuthProvider } from "@repo/db/enums";
 import db from "@repo/db/client";
+import { getServerSession } from "next-auth";
 
 export const getUser = async (email: string) => {
   if (!email) throw new Error("Email is required");
@@ -80,12 +81,17 @@ export const getUserList = async (
   skip: number = 0,
   take: number = 5,
 ) => {
+  const session = await getServerSession();
+  if (!session) throw new Error("Unauthorized");
   return await db.user.findMany({
     skip,
     take,
     where: {
       email: {
         contains: searchFilter,
+        not: {
+          equals: session.user?.email as string,
+        },
       },
     },
   });

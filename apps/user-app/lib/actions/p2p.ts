@@ -8,16 +8,21 @@ import jwt from "jsonwebtoken";
 export const getP2P = async () => {
   const session = await getServerSession();
   if (!session?.user) throw new Error("User not found");
-  return await db.peerToPeerTransaction.findMany({
-    include: {
-      from_user: true,
-      to_user: true,
-    },
-    where: {
-      from_user: {
-        email: session.user.email as string,
+  return (
+    await db.peerToPeerTransaction.findMany({
+      include: {
+        from_user: true,
+        to_user: true,
       },
-    },
+      where: {
+        from_user: {
+          email: session.user.email as string,
+        },
+      },
+    })
+  ).map((transaction) => {
+    transaction.amount = transaction.amount / 100;
+    return transaction;
   });
 };
 
@@ -27,15 +32,27 @@ export const createP2P = async (
   amount: number,
   bank: Bank,
 ) => {
-  if (amount <= 0) throw new Error("Invalid amount");
-  if (!from_user || !to_user || !bank) throw new Error("Invalid input");
+  const user = await db.user.findUnique({
+    where: {
+      email: from_user,
+    },
+    include: {
+      balance: true,
+    },
+  });
+
+  if (amount <= 0 || (user?.balance?.amount as number) < amount)
+    throw new Error("Insufficient balance");
+
+  if (!from_user || !to_user || !bank) throw new Error("Missing field input");
+
   const transaction = await db.peerToPeerTransaction.create({
     include: {
       from_user: true,
       to_user: true,
     },
     data: {
-      amount,
+      amount: amount * 100,
       bank,
       from_user: {
         connect: {
@@ -50,10 +67,10 @@ export const createP2P = async (
       txn_status: TransactionStatus.PENDING,
     },
   });
-  await axios.post(
+  axios.post(
     "http://localhost:3001/resolve-p2p",
     {
-      amount,
+      amount: transaction.amount,
       bank,
       from_user: transaction.from_user,
       to_user: transaction.to_user,
@@ -64,5 +81,6 @@ export const createP2P = async (
       },
     },
   );
+  transaction.amount = transaction.amount / 100;
   return transaction;
 };

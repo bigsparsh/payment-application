@@ -81,13 +81,22 @@ export default function Component() {
       return;
     }
     setLoading(true);
-    const transaction: PeerToPeerTransaction & ExtraUser = await createP2P(
-      session.data?.user?.email as string,
-      selectedRecipient.email,
-      amount * 100,
-      bank,
-    );
-    setTransactions([transaction, ...transactions!]);
+    try {
+      const transaction: PeerToPeerTransaction & ExtraUser = await createP2P(
+        session.data?.user?.email as string,
+        selectedRecipient.email,
+        amount,
+        bank,
+      );
+      setTransactions([transaction, ...transactions!]);
+    } catch (e: any) {
+      toast("Transfer Failed", {
+        description: e.message,
+        icon: <Ban size="16" />,
+      });
+      setLoading(false);
+      return;
+    }
     setLoading(false);
   };
 
@@ -280,7 +289,7 @@ export default function Component() {
                           </Badge>
                         </TableCell>
                         <TableCell>{transfer.to_user.name}</TableCell>
-                        <TableCell>${transfer.amount / 100}</TableCell>
+                        <TableCell>${transfer.amount}</TableCell>
                         <TableCell>{transfer.bank}</TableCell>
                       </TableRow>
                     ),
