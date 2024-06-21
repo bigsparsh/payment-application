@@ -4,7 +4,7 @@ import { AuthProvider } from "@repo/db/enums";
 import db from "@repo/db/client";
 import { getServerSession } from "next-auth";
 
-export const getUser = async (email: string) => {
+export const getUserByEmail = async (email: string) => {
   if (!email) throw new Error("Email is required");
   return await db.user.findUnique({
     where: {
@@ -13,10 +13,19 @@ export const getUser = async (email: string) => {
   });
 };
 
+export const getUserById = async (user_id: string) => {
+  if (!user_id) throw new Error("User ID is required");
+  return await db.user.findUnique({
+    where: {
+      user_id,
+    },
+  });
+};
+
 export const createUser = async (credentials: {
   email: string;
   name: string;
-  profile_image: string;
+  profile_image?: string;
   password?: string;
   auth_provider: AuthProvider;
 }) => {
@@ -93,6 +102,21 @@ export const getUserList = async (
           equals: session.user?.email as string,
         },
       },
+    },
+  });
+};
+
+export const getTransactionUsers = async () => {
+  const session = await getServerSession();
+  if (!session) throw new Error("Unauthorized");
+  return await db.peerToPeerTransaction.findMany({
+    where: {
+      from_user: {
+        email: session.user?.email as string,
+      },
+    },
+    include: {
+      to_user: true,
     },
   });
 };

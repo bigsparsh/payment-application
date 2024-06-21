@@ -14,8 +14,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useEffect, useState } from "react";
 import { User } from "@repo/db/types";
-import { getUser } from "@/lib/actions/user";
-import { ArrowUpDown } from "lucide-react";
+import { getUserByEmail } from "@/lib/actions/user";
+import { ArrowUpDown, UserIcon } from "lucide-react";
 
 export default function Component({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -30,6 +30,11 @@ export default function Component({ children }: { children: React.ReactNode }) {
       name: "Peer to Peer",
       icon: <ArrowUpDown className="h-4 w-4" />,
       href: "/p2p",
+    },
+    {
+      name: "People",
+      icon: <UserIcon className="h-4 w-4" />,
+      href: "/people",
     },
     {
       name: "Transactions",
@@ -50,7 +55,7 @@ export default function Component({ children }: { children: React.ReactNode }) {
   }, [session]);
   const gets = async () => {
     if (session.status != "loading" && session.status != "unauthenticated") {
-      setUser(await getUser(session.data?.user?.email as string));
+      setUser(await getUserByEmail(session.data?.user?.email as string));
     }
   };
   if (session.status == "unauthenticated") {
@@ -97,15 +102,11 @@ export default function Component({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex-1">
             <h1 className="font-semibold text-lg">
-              {path == "/dashboard"
-                ? "Dashboard"
-                : path == "/p2p"
-                  ? "Peer to Peer"
-                  : path == "/transactions"
-                    ? "Transactions"
-                    : path == "/settings"
-                      ? "Settings"
-                      : ""}
+              {navContent.map((ele) => {
+                if (ele.href.split("/")[1] == path.split("/")[1]) {
+                  return ele.name;
+                }
+              })}
             </h1>
           </div>
           <DropdownMenu>

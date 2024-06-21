@@ -51,7 +51,6 @@ const handler = NextAuth({
           return await createUser({
             email: credentials.email,
             name: credentials.email.split("@")[0],
-            profile_image: "https://ui-avatars.com/api/?name=",
             password: hashedPassword,
             auth_provider: AuthProvider.CREDENTIALS,
           });
