@@ -11,20 +11,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function Component() {
   const params = useSearchParams().get("error");
   const router = useRouter();
-  const info = useSession();
+  const session = useSession();
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    console.log(info);
     if (params) {
       toast("Invalid Credentials", {
         description: params,
       });
     }
-  }, [info, params]);
-  if (info.status == "authenticated") {
+  }, [session, params]);
+  if (session.status == "authenticated") {
     router.push("/dashboard");
-    return null;
+    return;
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
