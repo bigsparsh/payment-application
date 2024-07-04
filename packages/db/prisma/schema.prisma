@@ -22,8 +22,11 @@ model User {
   auth_type AuthType
   onramp_txns OnRampTransaction[]
   balance Balance?
-  from_user PeerToPeerTransaction[] @relation("from_user")
-  to_user PeerToPeerTransaction[] @relation("to_user")
+  created_at DateTime @default(now())
+  from_user_p2p PeerToPeerTransaction[] @relation("p2p_from_user")
+  to_user_p2p PeerToPeerTransaction[] @relation("p2p_to_user")
+  from_user_chat Chat[] @relation("chat_from_user")
+  to_user_chat Chat[] @relation("chat_to_user")
 }
 
 model OnRampTransaction {
@@ -41,8 +44,8 @@ model PeerToPeerTransaction {
   from_user_id String 
   to_user_id String
   bank Bank
-  from_user User @relation("from_user", fields: [from_user_id], references: [user_id])
-  to_user User @relation("to_user", fields: [to_user_id], references: [user_id])
+  from_user User @relation("p2p_from_user", fields: [from_user_id], references: [user_id])
+  to_user User @relation("p2p_to_user", fields: [to_user_id], references: [user_id])
   amount Int
   txn_status TransactionStatus
 }
@@ -53,6 +56,16 @@ model Balance {
   user User @relation(fields: [user_id], references: [user_id])
   amount Int
   locked Int
+}
+
+model Chat {
+  chat_id String @id @default(uuid())
+  from_user_id String
+  to_user_id String
+  message String
+  sent_at DateTime @default(now())
+  from_user User @relation("chat_from_user", fields: [from_user_id], references: [user_id])
+  to_user User @relation("chat_to_user", fields: [to_user_id], references: [user_id])
 }
 
 enum AuthType {

@@ -1,16 +1,31 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { User } from "@repo/db/types";
+import { Chat, User } from "@repo/db/types";
 import { getUserByEmail } from "@/lib/actions/user";
+import { createChat, getChat } from "@/lib/actions/chat";
+import { usePathname } from "next/navigation";
 
+type ExtraUser = {
+  from_user: User;
+  to_user: User;
+};
 export default function Component() {
+  const path = usePathname();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
   const session = useSession();
+  const messageRef = useRef<HTMLInputElement>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [chats, setChats] = useState<(Chat & ExtraUser)[]>();
+  const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -27,15 +42,56 @@ export default function Component() {
         );
       };
       newSocket.onmessage = (message) => {
-        console.log("Message received:", message.data);
+        const data = JSON.parse(message.data);
+        if (data.type === "message") {
+          const newChat = createChat(
+            data,
+            user?.user_id as string,
+            path.split("/")[2],
+          );
+          setChats((prev) => [
+            // @ts-ignore
+            ...prev,
+            newChat,
+          ]);
+        }
       };
     }
     setSocket(newSocket);
     return () => newSocket.close();
   }, [session]);
 
+  const sendMessage = async () => {
+    const msg = messageRef.current?.value;
+    if (msg) {
+      const newChat = await createChat(
+        msg as string,
+        user?.user_id as string,
+        path.split("/")[2],
+      );
+      setChats((prev) => [
+        // @ts-ignore
+        ...prev,
+        newChat,
+      ]);
+      socket?.send(
+        JSON.stringify({
+          type: "message",
+          sender: user?.user_id,
+          receiver: path.split("/")[2],
+          payload: {
+            message: msg,
+          },
+        }),
+      );
+    }
+  };
+
   const gets = async () => {
+    setLoading(true);
     setUser(await getUserByEmail(session.data?.user?.email as string));
+    setChats(await getChat());
+    setLoading(false);
   };
 
   return (
@@ -89,51 +145,57 @@ export default function Component() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Chat</h2>
           <div className="bg-muted rounded-lg p-4 h-[400px] overflow-y-auto flex flex-col gap-4">
-            <div className="flex items-end gap-2">
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="bg-card text-card-foreground rounded-lg p-3 max-w-[70%]">
-                <p>
-                  Hi there, I just sent you a payment. Let me know if you have
-                  any questions!
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">3:45 PM</p>
-              </div>
-            </div>
-            <div className="flex items-end gap-2 justify-end">
-              <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[70%]">
-                <p>
-                  Thanks, I received the payment. I&apos;ll take a look at it.
-                </p>
-                <p className="text-xs text-primary-foreground/80 mt-1">
-                  3:47 PM
-                </p>
-              </div>
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="flex items-end gap-2">
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="bg-card text-card-foreground rounded-lg p-3 max-w-[70%]">
-                <p>Great, let me know if you have any other questions!</p>
-                <p className="text-xs text-muted-foreground mt-1">3:49 PM</p>
-              </div>
-            </div>
+            {chats?.length != 0 &&
+              chats?.map((chat) =>
+                chat.from_user.email === user?.email ? (
+                  <>
+                    <div className="flex items-end gap-2  flex-row-reverse ">
+                      <Avatar>
+                        <AvatarImage
+                          src={chat.to_user.profile_image as string}
+                        />
+                        <AvatarFallback className="bg-card">
+                          {chat.to_user.name.split(" ")[0][0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[70%]">
+                        <p>{chat.message}</p>
+                        <p className="text-xs text-primary-foreground/80 mt-1">
+                          {formatter.format(chat.sent_at)} askdjasd
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-end gap-2 ">
+                      <Avatar>
+                        <AvatarImage
+                          src={chat.to_user.profile_image as string}
+                        />
+                        <AvatarFallback>
+                          {chat.to_user.name.split(" ")[0][0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-card text-card-foreground  rounded-lg p-3 max-w-[70%]">
+                        <p>{chat.message}</p>
+                        <p className="text-xs text-muted-foreground  mt-1">
+                          {formatter.format(chat.sent_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ),
+              )}
           </div>
           <div className="mt-4 flex items-center gap-2">
             <Input
               type="text"
               placeholder="Type your message..."
               className="flex-1"
+              ref={messageRef}
             />
-            <Button>Send</Button>
+            <Button onClick={sendMessage}>Send</Button>
           </div>
         </section>
       </main>

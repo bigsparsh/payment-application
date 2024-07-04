@@ -50,7 +50,6 @@ export default function Component({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>();
   useEffect(() => {
-    console.log(path);
     gets();
   }, [session]);
   const gets = async () => {
