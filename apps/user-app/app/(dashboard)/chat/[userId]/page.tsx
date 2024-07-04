@@ -4,22 +4,39 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useSession } from "next-auth/react";
+import { User } from "@repo/db/types";
+import { getUserByEmail } from "@/lib/actions/user";
 
 export default function Component() {
+  const session = useSession();
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const newSocket = new WebSocket("ws://localhost:8080");
-    newSocket.onopen = () => {
-      console.log("Connection established");
-      newSocket.send(JSON.stringify({ message: "Hello!" }));
-    };
-    newSocket.onmessage = (message) => {
-      console.log("Message received:", message.data);
-    };
+    if (session.status === "authenticated") {
+      gets();
+      newSocket.onopen = () => {
+        newSocket.send(
+          JSON.stringify({
+            id: user?.user_id,
+            name: user?.name,
+            email: user?.email,
+          }),
+        );
+      };
+      newSocket.onmessage = (message) => {
+        console.log("Message received:", message.data);
+      };
+    }
     setSocket(newSocket);
     return () => newSocket.close();
-  }, []);
+  }, [session]);
+
+  const gets = async () => {
+    setUser(await getUserByEmail(session.data?.user?.email as string));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -87,7 +104,9 @@ export default function Component() {
             </div>
             <div className="flex items-end gap-2 justify-end">
               <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[70%]">
-                <p>Thanks, I received the payment. I'll take a look at it.</p>
+                <p>
+                  Thanks, I received the payment. I&apos;ll take a look at it.
+                </p>
                 <p className="text-xs text-primary-foreground/80 mt-1">
                   3:47 PM
                 </p>
@@ -119,26 +138,5 @@ export default function Component() {
         </section>
       </main>
     </div>
-  );
-}
-
-function LogOutIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" x2="9" y1="12" y2="12" />
-    </svg>
   );
 }
