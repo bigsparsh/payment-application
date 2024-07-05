@@ -13,7 +13,7 @@ import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useEffect, useState } from "react";
-import { User } from "@repo/db/types";
+import { User } from "@prisma/client";
 import { getUserByEmail } from "@/lib/actions/user";
 import { ArrowUpDown, UserIcon } from "lucide-react";
 

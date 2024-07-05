@@ -22,9 +22,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { createTransaction, getTransactions } from "@/lib/actions/tranctions";
 import { useEffect, useRef, useState } from "react";
-import { Balance, OnRampTransaction } from "@repo/db/types";
+import { Balance, OnRampTransaction } from "@prisma/client";
 import { getBalance } from "@/lib/actions/balance";
-import { Bank, TransactionStatus } from "@repo/db/enums";
+import { Bank, TransactionStatus } from "@prisma/client";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Ban, LoaderPinwheel, RotateCw } from "lucide-react";

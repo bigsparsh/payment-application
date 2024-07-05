@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { Chat, User } from "@repo/db/types";
+import { Chat, User } from "@prisma/client";
 import { getUserByEmail } from "@/lib/actions/user";
 import { createChat, getChat } from "@/lib/actions/chat";
 import { usePathname } from "next/navigation";
@@ -24,7 +24,7 @@ export default function Component() {
   const messageRef = useRef<HTMLInputElement>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [chats, setChats] = useState<(Chat & ExtraUser)[]>();
-  const [loading, setLoading] = useState<boolean>(true);
+  const [_, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
   const chatbox = useRef<HTMLDivElement>(null);
 
@@ -169,7 +169,7 @@ export default function Component() {
           >
             {chats?.length != 0 &&
               chats &&
-              chats?.map((chat, index) =>
+              chats?.map((chat) =>
                 chat.from_user?.email === user?.email ? (
                   <>
                     <div className="flex items-end gap-2  flex-row-reverse ">

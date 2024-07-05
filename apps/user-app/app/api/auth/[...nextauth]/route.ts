@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import bcrypt from "bcrypt";
 import db from "@repo/db/client";
-import { AuthProvider } from "@repo/db/enums";
+import { AuthType as AuthProvider } from "@prisma/client";
 import { createUser } from "@/lib/actions/user";
 
 const handler = NextAuth({

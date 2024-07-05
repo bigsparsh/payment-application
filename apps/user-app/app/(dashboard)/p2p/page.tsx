@@ -26,8 +26,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { PeerToPeerTransaction, User } from "@repo/db/types";
-import { Bank, TransactionStatus } from "@repo/db/enums";
+import { PeerToPeerTransaction, User } from "@prisma/client";
+import { Bank, TransactionStatus } from "@prisma/client";
 import { getUserList } from "@/lib/actions/user";
 import { createP2P, getP2P } from "@/lib/actions/p2p";
 import { toast } from "sonner";
