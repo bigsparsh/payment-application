@@ -1,6 +1,6 @@
 "use server";
 
-import { AuthProvider } from "@repo/db/enums";
+import { AuthType as AuthProvider } from "@prisma/client";
 import db from "@repo/db/client";
 import { getServerSession } from "next-auth";
 

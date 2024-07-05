@@ -1,6 +1,6 @@
 "use server";
 
-import { Bank, TransactionStatus } from "@repo/db/enums";
+import { Bank, TransactionStatus } from "@prisma/client";
 import db from "@repo/db/client";
 import axios from "axios";
 import jwt from "jsonwebtoken";
