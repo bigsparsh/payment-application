@@ -1,5 +1,5 @@
 export {
-  AuthType as AuthProvider,
-  TransactionStatus,
-  Bank,
+  type AuthType as AuthProvider,
+  type TransactionStatus,
+  type Bank,
 } from "@prisma/client";

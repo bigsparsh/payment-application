@@ -1,7 +1,7 @@
 export {
-  OnRampTransaction,
-  User,
-  Balance,
-  PeerToPeerTransaction,
-  Chat,
+  type OnRampTransaction,
+  type User,
+  type Balance,
+  type PeerToPeerTransaction,
+  type Chat,
 } from "@prisma/client";
