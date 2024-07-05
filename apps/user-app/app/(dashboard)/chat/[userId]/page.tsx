@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { Chat, User } from "@repo/db/types";
 import { getUserByEmail } from "@/lib/actions/user";
-import { createChat, getChat, getChatById } from "@/lib/actions/chat";
+import { createChat, getChat } from "@/lib/actions/chat";
 import { usePathname } from "next/navigation";
 
 type ExtraUser = {
@@ -61,17 +61,30 @@ export default function Component() {
   }, [chats]);
 
   useEffect(() => {
-    if (session.status === "authenticated") {
+    if (user) {
+      window.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      };
+    }
+    if (session.status === "authenticated" && !user) {
       gets();
     }
-  }, [session]);
+    return () => {
+      window.removeEventListener("keydown", () => { });
+    };
+  }, [session, user]);
 
   const sendMessage = async () => {
     const msg = messageRef.current?.value;
-    if (msg) {
+    if (msg === "") return;
+    messageRef.current!.value = "";
+    messageRef.current!.focus();
+    if (msg && user) {
       const newChat = await createChat(
         msg as string,
-        user?.user_id as string,
+        user.user_id as string,
         path.split("/")[2],
       );
       setChats((prev) => [
@@ -159,15 +172,12 @@ export default function Component() {
               chats?.map((chat, index) =>
                 chat.from_user?.email === user?.email ? (
                   <>
-                    <div
-                      className="flex items-end gap-2  flex-row-reverse "
-                      id={index == chats.length - 1 ? "last" : ""}
-                    >
+                    <div className="flex items-end gap-2  flex-row-reverse ">
                       <Avatar>
                         <AvatarImage
                           src={chat.from_user?.profile_image as string}
                         />
-                        <AvatarFallback className="bg-card">
+                        <AvatarFallback className="bg-primary text-card">
                           {chat.from_user.name?.split(" ")[0][0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -181,16 +191,13 @@ export default function Component() {
                   </>
                 ) : (
                   <>
-                    <div
-                      className="flex items-end gap-2 "
-                      id={index == chats.length - 1 ? "last" : ""}
-                    >
+                    <div className="flex items-end gap-2 ">
                       <Avatar>
                         <AvatarImage
-                          src={chat.to_user?.profile_image as string}
+                          src={chat.from_user?.profile_image as string}
                         />
-                        <AvatarFallback>
-                          {chat.to_user?.name.split(" ")[0][0].toUpperCase()}
+                        <AvatarFallback className="bg-card text-primary">
+                          {chat.from_user?.name.split(" ")[0][0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="bg-card text-card-foreground  rounded-lg p-3 max-w-[70%]">
