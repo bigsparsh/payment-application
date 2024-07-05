@@ -26,6 +26,18 @@ wss.on("connection", (ws) => {
         }
       });
     }
+    if (message.type == "broadcast") {
+      users.map((user) => {
+        user.ws.send(
+          JSON.stringify({
+            type: "broadcast",
+            payload: {
+              message: users,
+            },
+          }),
+        );
+      });
+    }
     if (message.type == "message") {
       users.forEach((user) => {
         if (user.id === message.receiver) {
@@ -33,6 +45,7 @@ wss.on("connection", (ws) => {
             JSON.stringify({
               type: "message",
               sender: message.sender,
+              chat_id: message.payload.chat_id,
               payload: {
                 message: message.payload.message,
               },

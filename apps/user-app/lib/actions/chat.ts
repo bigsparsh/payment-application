@@ -7,7 +7,7 @@ type ExtraUser = {
   to_user: User;
   from_user: User;
 };
-export const getChat = async () => {
+export const getChat = async (with_id: string) => {
   const session = await getServerSession();
 
   const chat: (Chat & ExtraUser)[] = await db.chat.findMany({
@@ -17,16 +17,22 @@ export const getChat = async () => {
           from_user: {
             email: session?.user?.email as string,
           },
+          to_user: {
+            user_id: with_id,
+          },
         },
         {
           to_user: {
             email: session?.user?.email as string,
           },
+          from_user: {
+            user_id: with_id,
+          },
         },
       ],
     },
     orderBy: {
-      sent_at: "desc",
+      sent_at: "asc",
     },
     include: {
       to_user: true,
@@ -51,6 +57,20 @@ export const createChat = async (
       message,
       from_user_id,
       to_user_id,
+    },
+    include: {
+      to_user: true,
+      from_user: true,
+    },
+  });
+
+  return chat;
+};
+
+export const getChatById = async (chat_id: string) => {
+  const chat = await db.chat.findUnique({
+    where: {
+      chat_id,
     },
     include: {
       to_user: true,

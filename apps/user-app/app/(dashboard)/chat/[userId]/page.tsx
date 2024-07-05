@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { Chat, User } from "@repo/db/types";
 import { getUserByEmail } from "@/lib/actions/user";
-import { createChat, getChat } from "@/lib/actions/chat";
+import { createChat, getChat, getChatById } from "@/lib/actions/chat";
 import { usePathname } from "next/navigation";
 
 type ExtraUser = {
@@ -19,7 +19,6 @@ export default function Component() {
   const formatter = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   });
   const session = useSession();
   const messageRef = useRef<HTMLInputElement>(null);
@@ -27,38 +26,44 @@ export default function Component() {
   const [chats, setChats] = useState<(Chat & ExtraUser)[]>();
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const chatbox = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:8080");
-    if (session.status === "authenticated") {
-      gets();
+    if (user) {
+      const newSocket = new WebSocket("ws://localhost:8080");
       newSocket.onopen = () => {
         newSocket.send(
           JSON.stringify({
-            id: user?.user_id,
-            name: user?.name,
-            email: user?.email,
+            type: "connection",
+            payload: {
+              id: user?.user_id,
+              name: user?.name,
+              email: user?.email,
+            },
           }),
         );
       };
       newSocket.onmessage = (message) => {
         const data = JSON.parse(message.data);
         if (data.type === "message") {
-          const newChat = createChat(
-            data,
-            user?.user_id as string,
-            path.split("/")[2],
-          );
-          setChats((prev) => [
-            // @ts-ignore
-            ...prev,
-            newChat,
-          ]);
+          gets();
         }
       };
+      setSocket(newSocket);
     }
-    setSocket(newSocket);
-    return () => newSocket.close();
+    return () => socket?.close();
+  }, [user, path]);
+
+  useEffect(() => {
+    (chatbox.current as HTMLDivElement).scrollTop = (
+      chatbox.current as HTMLDivElement
+    ).scrollHeight;
+  }, [chats]);
+
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      gets();
+    }
   }, [session]);
 
   const sendMessage = async () => {
@@ -80,6 +85,7 @@ export default function Component() {
           sender: user?.user_id,
           receiver: path.split("/")[2],
           payload: {
+            id: newChat.chat_id,
             message: msg,
           },
         }),
@@ -90,7 +96,7 @@ export default function Component() {
   const gets = async () => {
     setLoading(true);
     setUser(await getUserByEmail(session.data?.user?.email as string));
-    setChats(await getChat());
+    setChats(await getChat(path.split("/")[2]));
     setLoading(false);
   };
 
@@ -144,37 +150,47 @@ export default function Component() {
         </section>
         <section>
           <h2 className="text-2xl font-semibold mb-4">Chat</h2>
-          <div className="bg-muted rounded-lg p-4 h-[400px] overflow-y-auto flex flex-col gap-4">
+          <div
+            className="bg-muted rounded-lg p-4 h-[400px] overflow-y-auto flex flex-col gap-4"
+            ref={chatbox}
+          >
             {chats?.length != 0 &&
-              chats?.map((chat) =>
-                chat.from_user.email === user?.email ? (
+              chats &&
+              chats?.map((chat, index) =>
+                chat.from_user?.email === user?.email ? (
                   <>
-                    <div className="flex items-end gap-2  flex-row-reverse ">
+                    <div
+                      className="flex items-end gap-2  flex-row-reverse "
+                      id={index == chats.length - 1 ? "last" : ""}
+                    >
                       <Avatar>
                         <AvatarImage
-                          src={chat.to_user.profile_image as string}
+                          src={chat.from_user?.profile_image as string}
                         />
                         <AvatarFallback className="bg-card">
-                          {chat.to_user.name.split(" ")[0][0].toUpperCase()}
+                          {chat.from_user.name?.split(" ")[0][0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[70%]">
                         <p>{chat.message}</p>
                         <p className="text-xs text-primary-foreground/80 mt-1">
-                          {formatter.format(chat.sent_at)} askdjasd
+                          {formatter.format(chat.sent_at)}
                         </p>
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="flex items-end gap-2 ">
+                    <div
+                      className="flex items-end gap-2 "
+                      id={index == chats.length - 1 ? "last" : ""}
+                    >
                       <Avatar>
                         <AvatarImage
-                          src={chat.to_user.profile_image as string}
+                          src={chat.to_user?.profile_image as string}
                         />
                         <AvatarFallback>
-                          {chat.to_user.name.split(" ")[0][0].toUpperCase()}
+                          {chat.to_user?.name.split(" ")[0][0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="bg-card text-card-foreground  rounded-lg p-3 max-w-[70%]">
