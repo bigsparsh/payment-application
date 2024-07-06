@@ -5,11 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { Chat, PeerToPeerTransaction, User } from "@prisma/client";
+import {
+  Chat,
+  PeerToPeerTransaction,
+  TransactionStatus,
+  User,
+} from "@prisma/client";
 import { getUserByEmail, getUserById } from "@/lib/actions/user";
 import { createChat, getChat } from "@/lib/actions/chat";
 import { usePathname } from "next/navigation";
-import { ArrowRight, DollarSign, MessageCircleOff } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  DollarSign,
+  MessageCircleOff,
+  RotateCw,
+} from "lucide-react";
 import { getP2PWith } from "@/lib/actions/p2p";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type } from "os";
@@ -132,11 +143,28 @@ export default function Component() {
     setLoading(false);
   };
 
+  const getOnlyP2Ps = async () => {
+    setLoading(true);
+    setP2Ps(await getP2PWith(path.split("/")[2]));
+    setLoading(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Payment History</h2>
+          <div className="text-2xl font-semibold mb-4 flex justify-between items-center">
+            Payment History
+            {loading ? (
+              <Button disabled>
+                <RotateCw size={16} className="animate-spin" />
+              </Button>
+            ) : (
+              <Button onClick={getOnlyP2Ps}>
+                <RotateCw size={16} />
+              </Button>
+            )}
+          </div>
           <div className="grid gap-4">
             {p2ps?.length === 0 || !p2ps ? (
               <div className="flex gap-2 items-center justify-center h-96">
@@ -155,28 +183,43 @@ export default function Component() {
                 </div>
               </div>
             ) : (
-              p2ps?.map((p2p) => (
-                <Card key={p2p.txn_id}>
-                  <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4 mt-5">
-                    <div>
-                      <p className="font-medium">
-                        {p2p.from_user.name} <ArrowRight /> {p2p.to_user.name}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {formatter.format(p2p.created_at)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">$ {p2p.amount}</p>
-                      <p className="text-muted-foreground text-sm">
-                        {p2p.from_user_id == user?.user_id
-                          ? "Sent"
-                          : "Received"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              p2ps?.map((p2p) => {
+                if (
+                  p2p.txn_status === TransactionStatus.FAILED ||
+                  p2p.txn_status === TransactionStatus.PENDING
+                )
+                  return;
+                return (
+                  <Card key={p2p.txn_id}>
+                    <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4 mt-5">
+                      <div>
+                        <p className="font-medium flex gap-x-5 flex-wrap">
+                          {p2p.from_user.name}
+                          {p2p.from_user_id == user?.user_id ? (
+                            <ArrowRight />
+                          ) : (
+                            <ArrowLeft />
+                          )}
+                          {p2p.to_user.name}
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          {formatter.format(p2p.created_at)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">$ {p2p.amount}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {p2p.from_user_id == user?.user_id ? (
+                            <p className="text-red-500">- Sent</p>
+                          ) : (
+                            <p className="text-lime-500">+ Received</p>
+                          )}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </section>
