@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -14,17 +14,19 @@ export default function Component() {
   const session = useSession();
   const email = useRef<HTMLInputElement>(null);
   const password = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
+    if (session.status == "authenticated") {
+      router.push("/dashboard");
+      return;
+    }
     if (params) {
       toast("Invalid Credentials", {
         description: params,
       });
     }
   }, [session, params]);
-  if (session.status == "authenticated") {
-    router.push("/dashboard");
-    return;
-  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const out = await signIn("credentials", {

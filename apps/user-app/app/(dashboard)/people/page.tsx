@@ -34,7 +34,7 @@ export default function Component() {
         <div>
           <h2 className="text-2xl font-bold mb-6">Previously Paid Users</h2>
           <div className="space-y-4">
-            {usersList?.length == 0 ? (
+            {usersList?.length == 0 || !usersList ? (
               <div className="flex gap-3 text-destructive px-5">
                 <Handshake /> You have made no transactions yet
               </div>
@@ -49,7 +49,7 @@ export default function Component() {
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-10 w-10 ">
                         <AvatarImage src={user.profile_image as string} />
-                        <AvatarFallback className="bg-primary">
+                        <AvatarFallback className="bg-card">
                           {user?.name.split(" ")[0][0].toUpperCase()}
                           {user?.name.split(" ")[1]?.[0].toUpperCase()}
                         </AvatarFallback>
@@ -78,7 +78,7 @@ export default function Component() {
         <div>
           <h2 className="text-2xl font-bold mb-6">New Users</h2>
           <div className="space-y-4">
-            {usersList?.length == 0 ? (
+            {usersList?.length == 0 || !usersList ? (
               <div className="flex gap-3 text-destructive px-5">
                 <UserRoundX /> There are no users
               </div>
@@ -93,7 +93,7 @@ export default function Component() {
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={user.profile_image as string} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary text-card">
                           {user?.name.split(" ")[0][0].toUpperCase()}
                           {user?.name.split(" ")[1]?.[0].toUpperCase()}
                         </AvatarFallback>
@@ -113,7 +113,7 @@ export default function Component() {
                         variant="default"
                         size="sm"
                         onClick={() => {
-                          router.push(`/profile/${user.user_id}`);
+                          router.push(`/people/${user.user_id}`);
                         }}
                       >
                         View Profile

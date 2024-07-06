@@ -33,6 +33,7 @@ wss.on("connection", (ws) => {
             type: "broadcast",
             payload: {
               message: users,
+              text: message.payload.message,
             },
           }),
         );

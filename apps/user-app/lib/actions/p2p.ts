@@ -26,6 +26,42 @@ export const getP2P = async () => {
   });
 };
 
+export const getP2PWith = async (with_id: string) => {
+  const session = await getServerSession();
+  const userTransactions = (
+    await db.peerToPeerTransaction.findMany({
+      include: {
+        from_user: true,
+        to_user: true,
+      },
+      where: {
+        OR: [
+          {
+            from_user: {
+              email: session?.user?.email as string,
+            },
+            to_user: {
+              user_id: with_id,
+            },
+          },
+          {
+            to_user: {
+              email: session?.user?.email as string,
+            },
+            from_user: {
+              user_id: with_id,
+            },
+          },
+        ],
+      },
+    })
+  ).map((transaction) => {
+    transaction.amount = transaction.amount / 100;
+    return transaction;
+  });
+  return userTransactions;
+};
+
 export const createP2P = async (
   from_user: string,
   to_user: string,

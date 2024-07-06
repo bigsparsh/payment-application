@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { Chat, User } from "@prisma/client";
-import { getUserByEmail } from "@/lib/actions/user";
+import { Chat, PeerToPeerTransaction, User } from "@prisma/client";
+import { getUserByEmail, getUserById } from "@/lib/actions/user";
 import { createChat, getChat } from "@/lib/actions/chat";
 import { usePathname } from "next/navigation";
+import { ArrowRight, DollarSign, MessageCircleOff } from "lucide-react";
+import { getP2PWith } from "@/lib/actions/p2p";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ExtraUser = {
   from_user: User;
@@ -24,7 +27,9 @@ export default function Component() {
   const messageRef = useRef<HTMLInputElement>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [chats, setChats] = useState<(Chat & ExtraUser)[]>();
-  const [_, setLoading] = useState<boolean>(true);
+  const [otherUser, setOtherUser] = useState<User | null>(null);
+  const [p2ps, setP2Ps] = useState<(PeerToPeerTransaction & ExtraUser)[]>();
+  const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
   const chatbox = useRef<HTMLDivElement>(null);
 
@@ -109,7 +114,9 @@ export default function Component() {
   const gets = async () => {
     setLoading(true);
     setUser(await getUserByEmail(session.data?.user?.email as string));
+    setOtherUser(await getUserById(path.split("/")[2]));
     setChats(await getChat(path.split("/")[2]));
+    setP2Ps(await getP2PWith(path.split("/")[2]));
     setLoading(false);
   };
 
@@ -119,56 +126,64 @@ export default function Component() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Payment History</h2>
           <div className="grid gap-4">
-            <Card>
-              <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4 mt-5">
+            {p2ps?.length === 0 || !p2ps ? (
+              <div className="flex gap-2 items-center justify-center h-96">
+                <DollarSign size="45" />
                 <div>
-                  <p className="font-medium">Jane Doe</p>
-                  <p className="text-muted-foreground text-sm">May 15, 2023</p>
+                  <div className="flex gap-2 items-center mb-[-25px]">
+                    No transactions with{" "}
+                    {loading ? (
+                      <Skeleton className="w-32 h-4" />
+                    ) : (
+                      otherUser?.name
+                    )}
+                  </div>
+                  <br />
+                  Go to Peer to Peer to do so now!
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">$50.00</p>
-                  <p className="text-muted-foreground text-sm">Sent</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4">
-                <div>
-                  <p className="font-medium">Michael Smith</p>
-                  <p className="text-muted-foreground text-sm">
-                    April 30, 2023
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">$25.00</p>
-                  <p className="text-muted-foreground text-sm">Received</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4">
-                <div>
-                  <p className="font-medium">Sarah Johnson</p>
-                  <p className="text-muted-foreground text-sm">
-                    April 20, 2023
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">$75.00</p>
-                  <p className="text-muted-foreground text-sm">Sent</p>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ) : (
+              p2ps?.map((p2p) => (
+                <Card key={p2p.txn_id}>
+                  <CardContent className="grid grid-cols-[1fr_auto] items-center gap-4 mt-5">
+                    <div>
+                      <p className="font-medium">
+                        {p2p.from_user.name} <ArrowRight /> {p2p.to_user.name}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        {formatter.format(p2p.created_at)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">$ {p2p.amount}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {p2p.from_user_id == user?.user_id
+                          ? "Sent"
+                          : "Received"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </section>
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Chat</h2>
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+            Chat with{" "}
+            {loading ? <Skeleton className="w-32 h-8" /> : otherUser?.name}
+          </h2>
           <div
             className="bg-muted rounded-lg p-4 h-[400px] overflow-y-auto flex flex-col gap-4"
             ref={chatbox}
           >
-            {chats?.length != 0 &&
-              chats &&
+            {chats?.length === 0 || !chats ? (
+              <div className=" flex justify-center items-center gap-4 h-full">
+                <MessageCircleOff size="50" />
+                No Chat history found <br />
+                Start Messaging now!
+              </div>
+            ) : (
               chats?.map((chat) =>
                 chat.from_user?.email === user?.email ? (
                   <>
@@ -209,7 +224,8 @@ export default function Component() {
                     </div>
                   </>
                 ),
-              )}
+              )
+            )}
           </div>
           <div className="mt-4 flex items-center gap-2">
             <Input

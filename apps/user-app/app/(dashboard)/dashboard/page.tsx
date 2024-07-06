@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectTrigger,
@@ -27,7 +28,7 @@ import { getBalance } from "@/lib/actions/balance";
 import { Bank, TransactionStatus } from "@prisma/client";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { Ban, LoaderPinwheel, RotateCw } from "lucide-react";
+import { BadgeDollarSign, Ban, LoaderPinwheel, RotateCw } from "lucide-react";
 
 export default function Component() {
   const session = useSession();
@@ -35,7 +36,7 @@ export default function Component() {
   const [bank, setBank] = useState<string>();
   const amount = useRef<HTMLInputElement>(null);
   const [tranctions, setTransactions] = useState<OnRampTransaction[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     setLoading(true);
@@ -46,9 +47,10 @@ export default function Component() {
   const gets = async () => {
     if (session.status === "loading" || session.status === "unauthenticated")
       return;
+    setLoading(true);
     setTransactions((await getTransactions()).reverse());
     setBalance(await getBalance());
-    return;
+    setLoading(false);
   };
 
   const handleSubmit = async () => {
@@ -137,7 +139,13 @@ export default function Component() {
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Unlocked Balance</span>
-                <span className="text-lg font-bold">${balance?.amount}</span>
+                <span className="text-lg font-bold">
+                  {balance ? (
+                    `$ ${balance?.amount}`
+                  ) : (
+                    <Skeleton className="w-20 h-7" />
+                  )}
+                </span>
               </div>
               <div className="text-sm text-stone-500 dark:text-stone-400">
                 Available for immediate use
@@ -147,7 +155,13 @@ export default function Component() {
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Locked Balance</span>
-                <span className="text-lg font-bold">${balance?.locked}</span>
+                <span className="text-lg font-bold">
+                  {balance ? (
+                    `$ ${balance?.locked}`
+                  ) : (
+                    <Skeleton className="w-20 h-7" />
+                  )}
+                </span>
               </div>
               <div className="text-sm text-stone-500 dark:text-stone-400">
                 Pending transactions
@@ -158,7 +172,11 @@ export default function Component() {
               <div className="flex items-center justify-between">
                 <span className="font-medium">Total Balance</span>
                 <span className="text-lg font-bold">
-                  ${balance?.amount! + balance?.locked!}
+                  {balance ? (
+                    `$ ${balance?.amount! + balance?.locked!}`
+                  ) : (
+                    <Skeleton className="w-20 h-7" />
+                  )}
                 </span>
               </div>
               <div className="text-sm text-stone-500 dark:text-stone-400">
@@ -179,9 +197,7 @@ export default function Component() {
             ) : (
               <Button
                 onClick={() => {
-                  setLoading(true);
                   gets();
-                  setLoading(false);
                 }}
               >
                 <RotateCw size={16} />
@@ -221,8 +237,10 @@ export default function Component() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell className="h-40 w-full grid place-items-center text-red-500 font-bold">
-                    No On Ramp Transactions found
+                  <TableCell className="py-10 w-full flex items-center justify-center gap-4">
+                    <BadgeDollarSign size="40" />
+                    No On Ramp Transactions found <br />
+                    Make a transaction now!
                   </TableCell>
                 </TableRow>
               )}

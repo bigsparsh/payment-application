@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Chivo, Libre_Franklin } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import { Suspense } from "react";
 
 const chivo = Chivo({
   subsets: ["latin"],
@@ -26,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${judson.variable} ${chivo.variable}`}>
-        <Providers attribute="class" defaultTheme="dark">
-          {children}
-        </Providers>
-        <Toaster />
+        <Suspense fallback={<div>Loading....</div>}>
+          <Providers attribute="class" defaultTheme="dark">
+            {children}
+          </Providers>
+          <Toaster />
+        </Suspense>
       </body>
     </html>
   );

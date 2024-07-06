@@ -33,6 +33,7 @@ model OnRampTransaction {
   txn_id String @id @default(uuid())
   user_id String 
   bank Bank
+  created_at DateTime @default(now())
   user User @relation(fields: [user_id], references: [user_id])
   amount Int
   txn_status TransactionStatus
@@ -44,6 +45,7 @@ model PeerToPeerTransaction {
   from_user_id String 
   to_user_id String
   bank Bank
+  created_at DateTime @default(now())
   from_user User @relation("p2p_from_user", fields: [from_user_id], references: [user_id])
   to_user User @relation("p2p_to_user", fields: [to_user_id], references: [user_id])
   amount Int
