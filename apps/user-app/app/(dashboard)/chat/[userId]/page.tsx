@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, DollarSign, MessageCircleOff } from "lucide-react";
 import { getP2PWith } from "@/lib/actions/p2p";
 import { Skeleton } from "@/components/ui/skeleton";
+import { type } from "os";
 
 type ExtraUser = {
   from_user: User;
@@ -31,6 +32,7 @@ export default function Component() {
   const [p2ps, setP2Ps] = useState<(PeerToPeerTransaction & ExtraUser)[]>();
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const [onlineStatus, setOnlineStatus] = useState<boolean>(false);
   const chatbox = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function Component() {
         newSocket.send(
           JSON.stringify({
             type: "connection",
+            connectedTo: path.split("/")[2],
             payload: {
               id: user?.user_id,
               name: user?.name,
@@ -47,11 +50,20 @@ export default function Component() {
             },
           }),
         );
+        newSocket.send(
+          JSON.stringify({
+            type: "peer connection",
+            connectedTo: path.split("/")[2],
+          }),
+        );
       };
       newSocket.onmessage = (message) => {
         const data = JSON.parse(message.data);
         if (data.type === "message") {
           gets();
+        }
+        if (data.type === "peer connection") {
+          data.connected ? setOnlineStatus(true) : setOnlineStatus(false);
         }
       };
       setSocket(newSocket);
@@ -207,11 +219,18 @@ export default function Component() {
                 ) : (
                   <>
                     <div className="flex items-end gap-2 ">
-                      <Avatar>
+                      <Avatar
+                        className={onlineStatus ? "ring-4 ring-lime-500" : ""}
+                      >
                         <AvatarImage
                           src={chat.from_user?.profile_image as string}
                         />
-                        <AvatarFallback className="bg-card text-primary">
+                        <AvatarFallback
+                          className={
+                            "bg-card text-primary " +
+                            (onlineStatus ? "border-2 border-lime-500" : "")
+                          }
+                        >
                           {chat.from_user?.name.split(" ")[0][0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
